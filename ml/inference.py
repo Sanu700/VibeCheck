@@ -5,8 +5,11 @@ overall toxicity index, and conversation tone.
 """
 
 import os
+from typing import List, Optional
 import joblib
 import numpy as np
+
+from ml.text_features import enrich_text_features
 
 class ToxicityAnalyzer:
     """
@@ -43,10 +46,11 @@ class ToxicityAnalyzer:
         
         self.tone_classifier = tone_artifact["tone_classifier"]
 
-    def analyze_message(self, text: str) -> dict:
+    def analyze_message(self, text: str, context: Optional[List[str]] = None) -> dict:
         """
         Analyzes a single text string and returns detailed toxicity categories,
         confidence scores, overall toxicity score, and detected tone.
+        Supports optional conversational context to disambiguate multi-turn sarcasm.
         """
         if not text or not text.strip():
             return {
@@ -58,7 +62,7 @@ class ToxicityAnalyzer:
                 "flagged_categories": []
             }
 
-        text_clean = text.strip()
+        text_clean = enrich_text_features(text.strip(), context=context)
         vec = self.vectorizer.transform([text_clean])
 
         # Multi-label probabilities
@@ -66,10 +70,12 @@ class ToxicityAnalyzer:
         categories = {}
         for idx, label in enumerate(self.target_labels):
             p = proba_list[idx]
-            if p.shape[1] == 2:
-                prob = float(p[0, 1])
+            est = self.toxic_classifier.estimators_[idx]
+            classes = list(est.classes_)
+            if 1 in classes:
+                prob = float(p[0, classes.index(1)])
             else:
-                prob = float(p[0, 0])
+                prob = 0.0
             categories[label] = round(prob, 4)
 
         # Tone prediction
@@ -89,7 +95,7 @@ class ToxicityAnalyzer:
         # Check if explicitly toxic by max score or weighted average
         weighted_score = sum(categories[k] * weights.get(k, 0.2) for k in self.target_labels)
         max_score = max(categories.values())
-        overall_score = round(min(1.0, max(weighted_score, max_score * 0.85)), 4)
+        overall_score = round(min(1.0, max(weighted_score, max_score)), 4)
 
         # Flagged categories (> 0.40 confidence threshold)
         flagged_categories = [cat for cat, score in categories.items() if score >= 0.40]

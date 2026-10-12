@@ -46,9 +46,9 @@
       }
     },
     "MultinomialNB": {
-      "macro_precision": 1.0,
+      "macro_precision": 0.9642,
       "macro_recall": 1.0,
-      "macro_f1": 1.0,
+      "macro_f1": 0.9801,
       "macro_roc_auc": 1.0,
       "per_label": {
         "toxic": {
@@ -58,9 +58,9 @@
           "roc_auc": 1.0
         },
         "insult": {
-          "precision": 1.0,
+          "precision": 0.9945,
           "recall": 1.0,
-          "f1": 1.0,
+          "f1": 0.9973,
           "roc_auc": 1.0
         },
         "harassment": {
@@ -82,9 +82,9 @@
           "roc_auc": 1.0
         },
         "identity_attack": {
-          "precision": 1.0,
+          "precision": 0.7907,
           "recall": 1.0,
-          "f1": 1.0,
+          "f1": 0.8831,
           "roc_auc": 1.0
         }
       }

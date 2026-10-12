@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
@@ -26,15 +26,16 @@ from ml.dataset_generator import build_dataset
 
 TARGET_LABELS = ["toxic", "insult", "harassment", "threat", "obscene", "identity_attack"]
 
+from sklearn.pipeline import FeatureUnion
+from ml.text_features import CUSTOM_STOP_WORDS, enrich_text_features
+
 def train_and_evaluate():
     dataset_path = "data/toxic_dataset_multilabel.csv"
-    if not os.path.exists(dataset_path):
-        print(f"Dataset not found at {dataset_path}, generating...")
-        df = build_dataset(dataset_path)
-    else:
-        df = pd.read_csv(dataset_path)
+    # Always regenerate dataset during retraining to incorporate phrase updates
+    print(f"Generating dataset at {dataset_path}...")
+    df = build_dataset(dataset_path)
 
-    X = df["text"]
+    X = df["text"].apply(lambda t: enrich_text_features(str(t)))
     Y = df[TARGET_LABELS]
     y_tone = df["tone"]
 
@@ -43,13 +44,23 @@ def train_and_evaluate():
         X, Y, y_tone, test_size=0.2, random_state=42, stratify=df["toxic"]
     )
 
-    # Text Vectorization
-    vectorizer = TfidfVectorizer(
-        ngram_range=(1, 2),
-        stop_words="english",
-        max_features=5000,
+    # Word + Character N-Gram Feature Union
+    word_vec = TfidfVectorizer(
+        ngram_range=(1, 3),
+        stop_words=CUSTOM_STOP_WORDS,
+        max_features=12000,
         sublinear_tf=True
     )
+    char_vec = TfidfVectorizer(
+        ngram_range=(3, 5),
+        analyzer="char_wb",
+        max_features=15000,
+        sublinear_tf=True
+    )
+    vectorizer = FeatureUnion([
+        ("word", word_vec),
+        ("char", char_vec)
+    ])
 
     X_train = vectorizer.fit_transform(X_train_raw)
     X_test = vectorizer.transform(X_test_raw)
@@ -77,11 +88,12 @@ def train_and_evaluate():
         try:
             proba_list = model_inst.predict_proba(X_test)
             for i, p in enumerate(proba_list):
-                # binary output proba for positive class
-                if p.shape[1] == 2:
-                    Y_proba[:, i] = p[:, 1]
+                est = model_inst.estimators_[i]
+                classes = list(est.classes_)
+                if 1 in classes:
+                    Y_proba[:, i] = p[:, classes.index(1)]
                 else:
-                    Y_proba[:, i] = p[:, 0]
+                    Y_proba[:, i] = 0.0
         except Exception as e:
             Y_proba = Y_pred.astype(float)
 

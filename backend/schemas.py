@@ -14,6 +14,10 @@ class MessageAnalysisRequest(BaseModel):
     requested_tones: Optional[List[str]] = Field(
         default_factory=lambda: ["Neutral", "Friendly", "Professional", "Constructive"]
     )
+    context: Optional[List[str]] = Field(
+        default=None,
+        description="Optional preceding messages to provide conversational context."
+    )
 
 class CategoryScores(BaseModel):
     toxic: float = 0.0

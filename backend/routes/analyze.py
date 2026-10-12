@@ -27,7 +27,8 @@ def analyze_message(payload: MessageAnalysisRequest):
         result = service.analyze_single_message(
             text=payload.text,
             sender=payload.sender or "User",
-            requested_tones=payload.requested_tones
+            requested_tones=payload.requested_tones,
+            context=payload.context
         )
         return result
     except Exception as e:

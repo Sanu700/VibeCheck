@@ -57,15 +57,17 @@ export default function RealtimeGuard() {
 
   const renderHeroToxicityHeader = (score) => {
     const pct = (score * 100).toFixed(1);
+    const severity = analysis?.severity_level || (score >= 0.75 ? "High" : score >= 0.45 ? "Medium" : score >= 0.25 ? "Low" : "Clean");
+    const isToxic = analysis?.is_toxic ?? (score >= 0.45);
 
-    if (score >= 0.60) {
+    if (severity === "Critical" || severity === "High" || score >= 0.75) {
       return (
         <div className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <div className="flex items-baseline space-x-4">
               <span className="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight text-red-400">{pct}%</span>
               <span className="text-sm font-bold px-3 py-1 rounded-md bg-red-950/80 border border-red-800 text-red-300">
-                High Risk 🔴
+                {severity === "Critical" ? "Critical Risk 🔴" : "High Risk 🔴"}
               </span>
             </div>
             <span className="text-sm text-zinc-300 font-medium">Detected Tone: <strong className="text-zinc-100 font-bold">{analysis.detected_tone}</strong></span>
@@ -75,7 +77,7 @@ export default function RealtimeGuard() {
           </p>
         </div>
       );
-    } else if (score >= 0.30) {
+    } else if (severity === "Medium" || isToxic || score >= 0.45) {
       return (
         <div className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
@@ -88,16 +90,34 @@ export default function RealtimeGuard() {
             <span className="text-sm text-zinc-300 font-medium">Detected Tone: <strong className="text-zinc-100 font-bold">{analysis.detected_tone}</strong></span>
           </div>
           <p className="text-sm text-zinc-300 pt-1">
-            Your message may come across as somewhat hostile or defensive.
+            Your message may come across as hostile, sarcastic, or defensive.
           </p>
         </div>
       );
-    } else {
+    } else if (severity === "Low" || score >= 0.25) {
       return (
         <div className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <div className="flex items-baseline space-x-4">
-              <span className="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight text-emerald-400">{pct}%</span>
+              <span className="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight text-amber-300">{pct}%</span>
+              <span className="text-sm font-bold px-3 py-1 rounded-md bg-amber-950/80 border border-amber-800 text-amber-200">
+                Low Risk ⚠
+              </span>
+            </div>
+            <span className="text-sm text-zinc-300 font-medium">Detected Tone: <strong className="text-zinc-100 font-bold">{analysis.detected_tone}</strong></span>
+          </div>
+          <p className="text-sm text-zinc-300 pt-1">
+            Your message contains mild negativity or potential passive aggression.
+          </p>
+        </div>
+      );
+    } else {
+      const safePct = (100 - parseFloat(pct)).toFixed(1);
+      return (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <div className="flex items-baseline space-x-4">
+              <span className="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight text-emerald-400">{safePct}%</span>
               <span className="text-sm font-bold px-3 py-1 rounded-md bg-emerald-950/80 border border-emerald-800 text-emerald-300">
                 Safe ✓
               </span>
@@ -105,7 +125,7 @@ export default function RealtimeGuard() {
             <span className="text-sm text-zinc-300 font-medium">Detected Tone: <strong className="text-zinc-100 font-bold">{analysis.detected_tone}</strong></span>
           </div>
           <p className="text-sm text-zinc-300 pt-1">
-            Your message appears respectful and non-toxic.
+            Your message appears respectful and non-toxic (Toxicity score: {pct}%).
           </p>
         </div>
       );

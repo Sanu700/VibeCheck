@@ -7,6 +7,7 @@ and workplace/chat communication styles.
 import random
 import os
 import pandas as pd
+from ml.text_features import enrich_text_features
 
 # Multi-label categories: toxic, insult, harassment, threat, obscene, identity_attack
 # Tone categories: Friendly, Neutral, Rude, Sarcastic, Happy, Angry
@@ -27,6 +28,27 @@ FRIENDLY_PHRASES = [
     ("Team, aaj ka energy top class hai!", "Friendly", 0, 0, 0, 0, 0, 0),
     ("Sahi bol, yeh idea best hai! Let's go.", "Friendly", 0, 0, 0, 0, 0, 0),
     ("Thanks bhai, appreciate karta hoon your assistance.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You are a total genius, thank you so much for solving this bug!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Brilliant work on the new feature release!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("This turned out great, well done team!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Another brilliant suggestion from the engineering team.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Glad we avoided a major disaster thanks to your quick fix.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("I'm sure this project will turn out great with this team!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Such a brilliant solution to a tough problem.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("What a lovely day to celebrate our team launch!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("So glad you could make it today, great seeing you!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("I'm sure you tried your hardest and you did a fantastic job.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("It's honestly impressive how quickly you solved that complex issue.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Thank you for that helpful explanation, really cleared things up.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("We couldn't have finished this release without your invaluable input.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Your code is a true work of art, beautifully written.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Another masterpiece delivered by our frontend team.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You are a genius! Thank you so much.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You are a genius, brilliant work!", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You're a genius, honestly amazing job.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You are a genius.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("You're a genius.", "Friendly", 0, 0, 0, 0, 0, 0),
+    ("Brilliant job everyone, proud of you all.", "Friendly", 0, 0, 0, 0, 0, 0),
 ]
 
 NEUTRAL_PHRASES = [
@@ -62,19 +84,87 @@ HAPPY_PHRASES = [
     ("Full energy vibes! Love this team.", "Happy", 0, 0, 0, 0, 0, 0),
 ]
 
-SARCASTIC_PHRASES = [
-    ("Oh wow, such a genius move by you again.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Yeah, because that strategy always works so well.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Perfect plan... as usual, total perfection.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Sure, what could possibly go wrong with this decision?", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Amazing! Totally not a complete disaster waiting to happen.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Brilliant, just brilliant. Another delay to celebrate.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("You're the absolute best... not really.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Wonderful, another broken build, fantastic job.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Great teamwork everyone, truly inspiring failure.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Oh nice, late again as always, what a surprise.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Wah bhai, genius nikla tu toh.", "Sarcastic", 0, 0, 0, 0, 0, 0),
-    ("Haan haan, bilkul sahi plan hai tera.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+SARCASTIC_HOSTILE_PHRASES = [
+    ("Oh wow, another brilliant idea from a total genius.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("I'm sure this will turn out just great like your last disaster.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Oh wow, another brilliant idea from a total genius. I'm sure this will turn out just great like your last disaster.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Oh wow, such a genius move by you again.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Amazing! Totally not a complete disaster waiting to happen.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Brilliant, just brilliant. Another delay to celebrate.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("You're the absolute best... not really.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Wonderful, another broken build, fantastic job.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Great teamwork everyone, truly inspiring failure.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Oh nice, late again as always, what a surprise.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Thanks for your genius insight, really saved us from success.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("What a revolutionary idea, breaking production in one click.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Congratulations on managing to ruin yet another release.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Did you think of that all by yourself? Truly astounding incompetence.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Keep talking, maybe someday you'll say something intelligent.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Another masterclass in how to completely fail a simple task.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Sure, what could possibly go wrong with your flawless track record?", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Yeah, because that strategy worked so wonderfully last time.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Wah bhai, genius nikla tu toh.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Haan haan, bilkul sahi plan hai tera.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("What a lovely way to ruin everyone's day.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("So glad you decided to grace us with your presence 2 hours late.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("I'm sure you tried your very hardest, which makes this even sadder.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("It's honestly impressive how consistently wrong you are.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Thank you for that completely useless explanation.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("We couldn't have messed this up without your invaluable input.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("You really outdid yourself with this disaster.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Must be exhausting being the only one who knows anything.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Your code is a true work of art, if the art is a trainwreck.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Another masterpiece of zero effort.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Suuuure, that was such an incredible suggestion.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Riiight, because that makes total sense.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Oh soooo helpful, thank you for nothing.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("You are a 'genius', truly a mastermind of errors.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Thanks for showing up right when all the work was finished.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Only you could manage to break something that was already working.", "Sarcastic", 1, 1, 0, 0, 0, 0),
+]
+
+SARCASTIC_BENIGN_PHRASES = [
+    ("Oh sure, because Mondays are just everyone's favorite day.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Yeah right, like I could ever wake up at 5 AM voluntarily.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Brilliant, my coffee machine broke right before my morning meeting.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Great, now it's pouring rain and I left my umbrella at home.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Oh wonderful, another software update right when I had 50 tabs open.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Sure, what could possibly go wrong with having cake for breakfast?", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Yeah, because sitting in traffic for two hours was totally my dream today.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Wah kya timing hai, right when I stepped out it started raining.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Perfect, another meeting that definitely could have been an email.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Oh lovely, my laptop battery died at 1 percent.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Sure, let's add another priority to our list of twenty urgent items.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Another rainy weekend, exactly what we all wished for.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Suuuure, I can definitely help you with that task after lunch.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Riiight, I totally forgot about that standup meeting!", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("Soooo excited for the weekend to finally get here.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+    ("What a lovely day to be stuck indoors debugging.", "Sarcastic", 0, 0, 0, 0, 0, 0),
+]
+
+INDIRECT_HOSTILE_PHRASES = [
+    ("I guess some people are just incapable of following simple instructions.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("It must be nice having absolutely zero standards for your work.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Clearly expecting basic competence from you was asking too much.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Don't strain yourself trying to comprehend this code.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Maybe leave the real engineering to people who know what they're doing.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Your inability to deliver on time is honestly impressive at this point.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("It is shocking how you consistently manage to do the bare minimum.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("You always find a way to make simple problems complicated.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Don't worry, we didn't expect you to understand anyway.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("It's cute that you think your opinion matters here.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Congratulations on discovering what everyone else knew last week.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("Maybe leave the thinking to people who actually work.", "Rude", 1, 1, 0, 0, 0, 0),
+    ("You must be so proud of doing the absolute bare minimum.", "Rude", 1, 1, 0, 0, 0, 0),
+]
+
+CONTEXTUAL_SARCASTIC_PHRASES = [
+    ("You are a genius. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("You're a genius. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Brilliant job. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("What a masterpiece. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Great work team. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
+    ("Flawless execution. __context_sarcastic_praise__", "Sarcastic", 1, 1, 0, 0, 0, 0),
 ]
 
 # Toxic categories: toxic, insult, harassment, threat, obscene, identity_attack
@@ -171,7 +261,7 @@ def generate_variations(phrase, tone, toxic, insult, harassment, threat, obscene
                 text = text.replace("!", "!!").replace(".", "...")
 
         variations.append({
-            "text": text,
+            "text": enrich_text_features(text),
             "tone": tone,
             "toxic": toxic,
             "insult": insult,
@@ -190,7 +280,10 @@ def build_dataset(output_path="data/toxic_dataset_multilabel.csv"):
         (FRIENDLY_PHRASES, 35),
         (NEUTRAL_PHRASES, 35),
         (HAPPY_PHRASES, 35),
-        (SARCASTIC_PHRASES, 35),
+        (SARCASTIC_HOSTILE_PHRASES, 35),
+        (SARCASTIC_BENIGN_PHRASES, 35),
+        (CONTEXTUAL_SARCASTIC_PHRASES, 35),
+        (INDIRECT_HOSTILE_PHRASES, 30),
         (RUDE_INSULT_PHRASES, 30),
         (HARASSMENT_PHRASES, 30),
         (THREAT_PHRASES, 30),

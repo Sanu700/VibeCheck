@@ -24,6 +24,11 @@ PHRASE_REPLACEMENTS = [
     (r"\bkya bakwaas (kar raha hai|hai)\b", "this explanation seems unclear to me"),
     (r"\barey chup kar\b", "let's pause and continue calmly"),
     (r"\bi will (break your face|hurt you|ruin your life)\b", "I feel strongly about this issue and need us to resolve it fairly"),
+    (r"\b(oh wow, )?(another )?brilliant idea from a total genius\b", "I have some reservations about this suggestion"),
+    (r"\b(turn out )?just great like your last disaster\b", "let's ensure we avoid past issues"),
+    (r"\bsuch a genius move by you again\b", "let's carefully reconsider this move"),
+    (r"\btruly inspiring failure\b", "an outcome we should learn from"),
+    (r"\bcomplete disaster waiting to happen\b", "an approach that carries significant risk"),
 ]
 
 # Profanity cleaner

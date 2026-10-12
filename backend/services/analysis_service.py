@@ -24,14 +24,20 @@ class AnalysisService:
         self.rewriter = get_rewriter()
         self.escalation_detector = get_escalation_detector()
 
-    def analyze_single_message(self, text: str, sender: str = "User", requested_tones: Optional[List[str]] = None) -> dict:
+    def analyze_single_message(
+        self,
+        text: str,
+        sender: str = "User",
+        requested_tones: Optional[List[str]] = None,
+        context: Optional[List[str]] = None
+    ) -> dict:
         """
-        Analyzes a single message and generates rewrites.
+        Analyzes a single message and generates rewrites. Supports optional conversational context.
         """
         if requested_tones is None:
             requested_tones = ["Neutral", "Friendly", "Professional", "Constructive"]
 
-        analysis = self.analyzer.analyze_message(text)
+        analysis = self.analyzer.analyze_message(text, context=context)
         
         rewrites = {}
         for tone in requested_tones:
@@ -112,7 +118,17 @@ class AnalysisService:
             text = item.get("text", "")
             timestamp = item.get("timestamp")
 
-            msg_res = self.analyze_single_message(text=text, sender=sender)
+            # Collect preceding messages as context to disambiguate multi-turn sarcasm
+            context_history = [
+                m.get("text", "") for m in items_to_analyze[max(0, idx - 3):idx]
+                if m.get("text")
+            ]
+
+            msg_res = self.analyze_single_message(
+                text=text,
+                sender=sender,
+                context=context_history if context_history else None
+            )
             msg_res["message_index"] = idx
             msg_res["timestamp"] = timestamp
 
