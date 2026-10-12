@@ -1,9 +1,9 @@
 /**
- * Centralized API Configuration for ToxicBuddy 2.0 Frontend.
- * Reads base URL from import.meta.env.VITE_API_URL.
+ * Centralized API Configuration for VibeCheck Frontend.
+ * Reads base URL from import.meta.env.VITE_API_URL or VITE_BACKEND_URL.
  */
 
-const rawApiUrl = import.meta.env.VITE_API_URL || '';
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
 export const API_BASE_URL = rawApiUrl.replace(/\/$/, '');
 
 /**

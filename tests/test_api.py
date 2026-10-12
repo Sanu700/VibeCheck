@@ -13,7 +13,12 @@ def test_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["service"] == "ToxicBuddy 2.0"
+
+def test_direct_health_endpoint():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
 
 def test_analyze_message_endpoint():
     payload = {

@@ -222,7 +222,7 @@ export default function RealtimeGuard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-orange-400" /> ToxicBuddy Suggests
+                  <Sparkles className="w-4 h-4 text-orange-400" /> VibeCheck Suggests
                 </h3>
                 <p className="text-xs text-zinc-400 mt-0.5">Reframing message intent into constructive language.</p>
               </div>
